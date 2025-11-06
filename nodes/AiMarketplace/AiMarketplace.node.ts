@@ -18,8 +18,8 @@ export class AiMarketplace implements INodeType {
 		defaults: {
 			name: 'AI Marketplace',
 		},
-		inputs: ['main'] as any,
-		outputs: ['main'] as any,
+		inputs: ['main'],
+		outputs: ['main'],
 		credentials: [
 			{
 				name: 'aiMarketplaceApi',
@@ -1095,7 +1095,7 @@ export class AiMarketplace implements INodeType {
 						
 						if (retryCount < maxRetries && isRetryableError) {
 							retryCount++;
-							await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
+							// Retry immediately - n8n workflow-level retries will handle delays
 							continue;
 						}
 						throw error;
