@@ -1,0 +1,335 @@
+{
+  "name": "AI Marketplace Sample Workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "f6b4b5a7-2f8c-4a8a-b5a7-2f8c4a8ab5a7",
+      "name": "When clicking 'Test workflow'",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        820,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "auth",
+        "operation": "login",
+        "email": "demo@example.com",
+        "password": "demopassword123"
+      },
+      "id": "a1b2c3d4-5e6f-7g8h-9i0j-k1l2m3n4o5p6",
+      "name": "AI Marketplace: Login",
+      "type": "aiMarketplace",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "health",
+        "operation": "check"
+      },
+      "id": "b2c3d4e5-6f7g-8h9i-0j1k-l2m3n4o5p6q7",
+      "name": "AI Marketplace: Health Check",
+      "type": "aiMarketplace",
+      "typeVersion": 1,
+      "position": [
+        1260,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "stats",
+        "operation": "users"
+      },
+      "id": "c3d4e5f6-7g8h-9i0j-1k2l-m3n4o5p6q7r8",
+      "name": "AI Marketplace: Stats Users",
+      "type": "aiMarketplace",
+      "typeVersion": 1,
+      "position": [
+        1480,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "lots",
+        "operation": "list"
+      },
+      "id": "d4e5f6g7-8h9i-0j1k-2l3m-n4o5p6q7r8s9",
+      "name": "AI Marketplace: List Lots",
+      "type": "aiMarketplace",
+      "typeVersion": 1,
+      "position": [
+        1700,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "lots",
+        "operation": "create",
+        "title": "Sample AI Service",
+        "pricingType": "fixed",
+        "price": 100,
+        "catId": "ai-services",
+        "description": "A sample AI service offering created via n8n workflow."
+      },
+      "id": "e5f6g7h8-9i0j-1k2l-3m4n-o5p6q7r8s9t0",
+      "name": "AI Marketplace: Create Lot",
+      "type": "aiMarketplace",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        360
+      ],
+      "credentials": {
+        "aiMarketplaceApi": {
+          "id": "f6g7h8i9-0j1k-2l3m-4n5o-p6q7r8s9t0u1",
+          "name": "AI Marketplace API Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "offers",
+        "operation": "create",
+        "lotId": "={{ $('AI Marketplace: Create Lot').item.json.lotId }}",
+        "amount": 95,
+        "comment": "Great service, looking forward to working with you!"
+      },
+      "id": "f7g8h9i0-1j2k-3l4m-5n6o-p7q8r9s0t1u2",
+      "name": "AI Marketplace: Create Offer",
+      "type": "aiMarketplace",
+      "typeVersion": 1,
+      "position": [
+        2140,
+        360
+      ],
+      "credentials": {
+        "aiMarketplaceApi": {
+          "id": "f6g7h8i9-0j1k-2l3m-4n5o-p6q7r8s9t0u1",
+          "name": "AI Marketplace API Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "offers",
+        "operation": "accept",
+        "offerId": "={{ $('AI Marketplace: Create Offer').item.json.offerId }}"
+      },
+      "id": "g8h9i0j1-2k3l-4m5n-6o7p-q8r9s0t1u2v3",
+      "name": "AI Marketplace: Accept Offer",
+      "type": "aiMarketplace",
+      "typeVersion": 1,
+      "position": [
+        2360,
+        360
+      ],
+      "credentials": {
+        "aiMarketplaceApi": {
+          "id": "f6g7h8i9-0j1k-2l3m-4n5o-p6q7r8s9t0u1",
+          "name": "AI Marketplace API Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "offers",
+        "operation": "complete",
+        "offerId": "={{ $('AI Marketplace: Create Offer').item.json.offerId }}"
+      },
+      "id": "h9i0j1k2-3l4m-5n6o-7p8q-r9s0t1u2v3w4",
+      "name": "AI Marketplace: Complete Offer",
+      "type": "aiMarketplace",
+      "typeVersion": 1,
+      "position": [
+        2580,
+        360
+      ],
+      "credentials": {
+        "aiMarketplaceApi": {
+          "id": "f6g7h8i9-0j1k-2l3m-4n5o-p6q7r8s9t0u1",
+          "name": "AI Marketplace API Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "feedback",
+        "operation": "create",
+        "offerId": "={{ $('AI Marketplace: Create Offer').item.json.offerId }}",
+        "quality": 5,
+        "deliveryTime": 5,
+        "price": 4,
+        "comment": "Excellent service, very professional and delivered on time!"
+      },
+      "id": "i0j1k2l3-4m5n-6o7p-8q9r-s0t1u2v3w4x5",
+      "name": "AI Marketplace: Create Feedback",
+      "type": "aiMarketplace",
+      "typeVersion": 1,
+      "position": [
+        2800,
+        360
+      ],
+      "credentials": {
+        "aiMarketplaceApi": {
+          "id": "f6g7h8i9-0j1k-2l3m-4n5o-p6q7r8s9t0u1",
+          "name": "AI Marketplace API Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "events",
+        "operation": "subscribe",
+        "eventTypes": ["onLotCreated"],
+        "callbackUrl": "https://example.com/webhook/lot-created"
+      },
+      "id": "j1k2l3m4-5n6o-7p8q-9r0s-t1u2v3w4x5y6",
+      "name": "AI Marketplace: Subscribe Events",
+      "type": "aiMarketplace",
+      "typeVersion": 1,
+      "position": [
+        3020,
+        360
+      ],
+      "credentials": {
+        "aiMarketplaceApi": {
+          "id": "f6g7h8i9-0j1k-2l3m-4n5o-p6q7r8s9t0u1",
+          "name": "AI Marketplace API Credentials"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking 'Test workflow'": {
+      "main": [
+        [
+          {
+            "node": "AI Marketplace: Login",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Marketplace: Login": {
+      "main": [
+        [
+          {
+            "node": "AI Marketplace: Health Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Marketplace: Health Check": {
+      "main": [
+        [
+          {
+            "node": "AI Marketplace: Stats Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Marketplace: Stats Users": {
+      "main": [
+        [
+          {
+            "node": "AI Marketplace: List Lots",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Marketplace: List Lots": {
+      "main": [
+        [
+          {
+            "node": "AI Marketplace: Create Lot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Marketplace: Create Lot": {
+      "main": [
+        [
+          {
+            "node": "AI Marketplace: Create Offer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Marketplace: Create Offer": {
+      "main": [
+        [
+          {
+            "node": "AI Marketplace: Accept Offer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Marketplace: Accept Offer": {
+      "main": [
+        [
+          {
+            "node": "AI Marketplace: Complete Offer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Marketplace: Complete Offer": {
+      "main": [
+        [
+          {
+            "node": "AI Marketplace: Create Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Marketplace: Create Feedback": {
+      "main": [
+        [
+          {
+            "node": "AI Marketplace: Subscribe Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3.0.4",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
+  },
+  "id": "sample-workflow",
+  "tags": []
+}
