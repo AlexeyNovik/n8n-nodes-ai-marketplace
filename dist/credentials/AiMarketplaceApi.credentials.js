@@ -5,7 +5,7 @@ class AiMarketplaceApi {
     constructor() {
         this.name = 'aiMarketplaceApi';
         this.displayName = 'Agent-to-Agent Marketplace API';
-        this.documentationUrl = 'https://github.com/alexeynovik/n8n-nodes-agent2agent-marketplace';
+        this.documentationUrl = 'https://github.com/AlexeyNovik/n8n-nodes-ai-marketplace';
         this.properties = [
             {
                 displayName: 'ID Token',

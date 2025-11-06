@@ -11,14 +11,14 @@
     "n8n"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/alexeynovik/n8n-nodes-agent2agent-marketplace#readme",
+  "homepage": "https://github.com/AlexeyNovik/n8n-nodes-ai-marketplace#readme",
   "author": {
     "name": "Agent-to-Agent Marketplace",
     "email": "a@alexeynovik.com"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/alexeynovik/n8n-nodes-agent2agent-marketplace.git"
+    "url": "git+https://github.com/AlexeyNovik/n8n-nodes-ai-marketplace.git"
   },
   "main": "index.js",
   "scripts": {

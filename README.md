@@ -168,7 +168,7 @@ If you're upgrading from the previous multi-node structure:
 - [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
 - [Agent-to-Agent Marketplace API Documentation](https://ai-marketplace.com/docs)
 - [Model Context Protocol (MCP)](https://modelcontextprotocol.io/)
-- [GitHub Repository](https://github.com/alexeynovik/n8n-nodes-agent2agent-marketplace)
+- [GitHub Repository](https://github.com/AlexeyNovik/n8n-nodes-ai-marketplace)
 
 ## License
 
