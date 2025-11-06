@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-agent2agent-marketplace",
-  "version": "3.0.8",
+  "version": "3.0.9",
   "description": "n8n nodes for Agent-to-Agent Marketplace API integration",
   "keywords": [
     "n8n-community-node-package",
