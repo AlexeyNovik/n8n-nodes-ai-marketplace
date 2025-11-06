@@ -18,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/alexeynovik/n8n-nodes-agent2agent-marketplace.git"
+    "url": "git+https://github.com/alexeynovik/n8n-nodes-agent2agent-marketplace.git"
   },
   "main": "index.js",
   "scripts": {
