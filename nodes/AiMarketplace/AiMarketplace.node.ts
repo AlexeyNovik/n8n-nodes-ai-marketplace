@@ -6,6 +6,13 @@ import {
 	NodeOperationError,
 } from 'n8n-workflow';
 
+interface IAdditionalFields {
+	timeout?: number;
+	retryOn5xx?: boolean;
+	maxRetries?: number;
+	responseFormat?: 'json' | 'raw';
+}
+
 export class AiMarketplace implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'AI Marketplace',
@@ -888,11 +895,11 @@ export class AiMarketplace implements INodeType {
 
 		for (let i = 0; i < items.length; i++) {
 			try {
-				const resource = this.getNodeParameter('resource', i) as string;
-				const operation = this.getNodeParameter('operation', i) as string;
-				const environment = this.getNodeParameter('environment', i) as string;
-				const overrideBaseUrl = this.getNodeParameter('overrideBaseUrl', i) as string;
-				const additionalFields = this.getNodeParameter('additionalFields', i, {}) as any;
+			const resource = this.getNodeParameter('resource', i) as string;
+			const operation = this.getNodeParameter('operation', i) as string;
+			const environment = this.getNodeParameter('environment', i) as string;
+			const overrideBaseUrl = this.getNodeParameter('overrideBaseUrl', i) as string;
+			const additionalFields = this.getNodeParameter('additionalFields', i, {}) as IAdditionalFields;
 
 				const timeout = additionalFields.timeout ?? 30;
 				const retryOn5xx = additionalFields.retryOn5xx ?? true;
@@ -1089,17 +1096,18 @@ export class AiMarketplace implements INodeType {
 								body: body ? (responseFormat === 'json' ? body : JSON.stringify(body)) : undefined,
 							});
 						}
-						break;
-					} catch (error: any) {
-						const isRetryableError = retryOn5xx && error.response?.status >= 500;
-						
-						if (retryCount < maxRetries && isRetryableError) {
-							retryCount++;
-							// Retry immediately - n8n workflow-level retries will handle delays
-							continue;
-						}
-						throw error;
+					break;
+				} catch (error) {
+					const errorObj = error as { response?: { status?: number }; message?: string };
+					const isRetryableError = retryOn5xx && errorObj.response?.status && errorObj.response.status >= 500;
+					
+					if (retryCount < maxRetries && isRetryableError) {
+						retryCount++;
+						// Retry immediately - n8n workflow-level retries will handle delays
+						continue;
 					}
+					throw error;
+				}
 				}
 
 				// Special handling for certain operations
@@ -1108,29 +1116,30 @@ export class AiMarketplace implements INodeType {
 					response.sessionToken = response.accessToken;
 				}
 
-				// Apply client-side limiting for lots list (MCP compatibility)
-				if (resource === 'lots' && operation === 'list' && responseFormat === 'json') {
-					const limit = this.getNodeParameter('limit', i, 0) as number;
-					if (limit > 0 && response?.lots && Array.isArray(response.lots)) {
-						response.lots = response.lots.slice(0, limit);
-					}
+			// Apply client-side limiting for lots list (MCP compatibility)
+			if (resource === 'lots' && operation === 'list' && responseFormat === 'json') {
+				const limit = this.getNodeParameter('limit', i, 0);
+				if (limit > 0 && response?.lots && Array.isArray(response.lots)) {
+					response.lots = response.lots.slice(0, limit);
 				}
+			}
 
 				returnData.push({
 					json: responseFormat === 'json' ? response : { data: response },
 					pairedItem: { item: i },
-				});
+			});
 
-			} catch (error: any) {
-				if (this.continueOnFail()) {
-					returnData.push({
-						json: { error: error.message },
-						pairedItem: { item: i },
-					});
-					continue;
-				}
-				throw new NodeOperationError(this.getNode(), error);
+		} catch (error) {
+			const errorObj = error as { message?: string };
+			if (this.continueOnFail()) {
+				returnData.push({
+					json: { error: errorObj.message || 'Unknown error' },
+					pairedItem: { item: i },
+				});
+				continue;
 			}
+			throw new NodeOperationError(this.getNode(), error as Error);
+		}
 		}
 
 		return [returnData];
