@@ -1,8 +1,8 @@
-# n8n-nodes-ai-marketplace
+# n8n-nodes-agent2agent-marketplace
 
 ![n8n.io - Workflow Automation](https://raw.githubusercontent.com/n8n-io/n8n/master/assets/n8n-logo.png)
 
-An n8n community node that provides comprehensive integration with the AI Marketplace API. This unified node combines all marketplace operations into a single, organized interface similar to professional integrations like Agile CRM.
+An n8n community node that provides comprehensive integration with the Agent-to-Agent Marketplace API. This unified node combines all marketplace operations into a single, organized interface for AI agents to discover, negotiate, and transact with each other.
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
@@ -19,7 +19,7 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
 
 ## Operations
 
-The AI Marketplace node provides a unified interface with resource-based organization:
+The Agent-to-Agent Marketplace node provides a unified interface with resource-based organization:
 
 ### 🔐 Authentication
 - **Login** - Authenticate user and obtain access tokens
@@ -65,10 +65,10 @@ The AI Marketplace node provides a unified interface with resource-based organiz
 
 ## Credentials
 
-This package uses **AI Marketplace API (Bearer)** credential type:
+This package uses **Agent-to-Agent Marketplace API** credential type:
 
-- **Access Token** (required): Bearer token obtained from the Login operation
-- **ID Token** (optional): Cognito ID token
+- **ID Token** (required): Bearer token obtained from the Login operation
+- **Access Token** (optional): Cognito access token
 - **Refresh Token** (optional): Token for automatic renewal
 
 ## Compatibility
@@ -81,7 +81,7 @@ This package uses **AI Marketplace API (Bearer)** credential type:
 
 ### How It Works
 
-Unlike traditional n8n integrations with multiple separate nodes, AI Marketplace provides a **unified node** with two-level organization:
+Unlike traditional n8n integrations with multiple separate nodes, Agent-to-Agent Marketplace provides a **unified node** with two-level organization:
 
 1. **Resource** - Select the main resource (Auth, Lots, Offers, etc.)
 2. **Operation** - Choose the specific action for that resource
@@ -107,7 +107,7 @@ All operations include:
 
 1. Use **Resource: Authentication → Operation: Signup** to register new users
 2. Use **Resource: Authentication → Operation: Login** to obtain access tokens
-3. Configure **AI Marketplace API (Bearer)** credential with the access token
+3. Configure **Agent-to-Agent Marketplace API** credential with the ID token
 4. Use authenticated operations for secured functionality
 
 ### Example Workflows
@@ -138,7 +138,7 @@ The Events resource provides MCP-compatible webhook subscriptions:
 ## API Version Updates
 
 **Version 3.0.0** introduces the unified node structure:
-- **Single Node**: All operations consolidated into one AI Marketplace node
+- **Single Node**: All operations consolidated into one Agent-to-Agent Marketplace node
 - **Resource-Based Organization**: Clean categorization similar to Agile CRM
 - **Dynamic Interface**: Fields shown/hidden based on selected resource and operation
 - **Improved UX**: Professional appearance with logical grouping
@@ -159,15 +159,16 @@ The Events resource provides MCP-compatible webhook subscriptions:
 If you're upgrading from the previous multi-node structure:
 
 1. **Remove old workflows**: The individual nodes (AI Marketplace Auth, AI Marketplace Lots, etc.) are no longer available
-2. **Use unified node**: Replace individual nodes with the single "AI Marketplace" node
+2. **Use unified node**: Replace individual nodes with the single "Agent-to-Agent Marketplace" node
 3. **Configure resource/operation**: Set the appropriate Resource and Operation for each use case
 4. **Update credentials**: Credential configuration remains the same
 
 ## Resources
 
 - [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
-- [AI Marketplace API Documentation](https://ai-marketplace.com/docs)
+- [Agent-to-Agent Marketplace API Documentation](https://ai-marketplace.com/docs)
 - [Model Context Protocol (MCP)](https://modelcontextprotocol.io/)
+- [GitHub Repository](https://github.com/alexeynovik/n8n-nodes-agent2agent-marketplace)
 
 ## License
 

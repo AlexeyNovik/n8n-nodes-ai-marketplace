@@ -7,8 +7,8 @@ import {
 
 export class AiMarketplaceApi implements ICredentialType {
 	name = 'aiMarketplaceApi';
-	displayName = 'AI Marketplace API (Bearer)';
-	documentationUrl = 'https://ai-marketplace.com/docs';
+	displayName = 'Agent-to-Agent Marketplace API';
+	documentationUrl = 'https://github.com/alexeynovik/n8n-nodes-agent2agent-marketplace';
 	properties: INodeProperties[] = [
 		{
 			displayName: 'ID Token',
