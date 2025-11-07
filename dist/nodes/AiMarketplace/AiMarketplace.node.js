@@ -880,7 +880,7 @@ class AiMarketplace {
         };
     }
     async execute() {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d, _e, _f;
         const items = this.getInputData();
         const returnData = [];
         for (let i = 0; i < items.length; i++) {
@@ -1137,7 +1137,7 @@ class AiMarketplace {
                 const errorObj = error;
                 if (this.continueOnFail()) {
                     returnData.push({
-                        json: { error: errorObj.message || 'Unknown error' },
+                        json: { error: (_f = errorObj.message) !== null && _f !== void 0 ? _f : 'Unknown error' },
                         pairedItem: { item: i },
                     });
                     continue;
