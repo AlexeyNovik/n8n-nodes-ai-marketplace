@@ -1106,10 +1106,11 @@ class AiMarketplace {
                         break;
                     }
                     catch (error) {
-                        const isRetryableError = retryOn5xx && ((_e = error.response) === null || _e === void 0 ? void 0 : _e.status) >= 500;
+                        const errorObj = error;
+                        const isRetryableError = retryOn5xx && ((_e = errorObj.response) === null || _e === void 0 ? void 0 : _e.status) && errorObj.response.status >= 500;
                         if (retryCount < maxRetries && isRetryableError) {
                             retryCount++;
-                            await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
+                            // Retry immediately - n8n workflow-level retries will handle delays
                             continue;
                         }
                         throw error;
@@ -1133,9 +1134,10 @@ class AiMarketplace {
                 });
             }
             catch (error) {
+                const errorObj = error;
                 if (this.continueOnFail()) {
                     returnData.push({
-                        json: { error: error.message },
+                        json: { error: errorObj.message || 'Unknown error' },
                         pairedItem: { item: i },
                     });
                     continue;
