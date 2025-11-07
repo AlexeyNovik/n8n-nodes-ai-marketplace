@@ -1084,7 +1084,7 @@ class AiMarketplace {
                 while (retryCount <= maxRetries) {
                     try {
                         if (useAuth) {
-                            response = await this.helpers.requestWithAuthentication.call(this, 'aiMarketplaceApi', {
+                            response = await this.helpers.httpRequestWithAuthentication.call(this, 'aiMarketplaceApi', {
                                 method,
                                 url: `${baseUrl}${endpoint}`,
                                 headers,
@@ -1094,7 +1094,7 @@ class AiMarketplace {
                             });
                         }
                         else {
-                            response = await this.helpers.request({
+                            response = await this.helpers.httpRequest({
                                 method,
                                 url: `${baseUrl}${endpoint}`,
                                 headers,

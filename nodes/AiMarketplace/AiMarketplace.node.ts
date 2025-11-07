@@ -1103,7 +1103,7 @@ export class AiMarketplace implements INodeType {
 				while (retryCount <= maxRetries) {
 					try {
 						if (useAuth) {
-							response = await this.helpers.requestWithAuthentication.call(this, 'aiMarketplaceApi', {
+							response = await this.helpers.httpRequestWithAuthentication.call(this, 'aiMarketplaceApi', {
 								method,
 								url: `${baseUrl}${endpoint}`,
 								headers,
@@ -1112,7 +1112,7 @@ export class AiMarketplace implements INodeType {
 								body: body ? (responseFormat === 'json' ? body : JSON.stringify(body)) : undefined,
 							});
 						} else {
-							response = await this.helpers.request({
+							response = await this.helpers.httpRequest({
 								method,
 								url: `${baseUrl}${endpoint}`,
 								headers,
