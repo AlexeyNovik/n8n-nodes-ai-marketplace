@@ -15,8 +15,8 @@ class AiMarketplace {
             defaults: {
                 name: 'AI Marketplace',
             },
-            inputs: ['main'],
-            outputs: ['main'],
+            inputs: [n8n_workflow_1.NodeConnectionTypes.Main],
+            outputs: [n8n_workflow_1.NodeConnectionTypes.Main],
             credentials: [
                 {
                     name: 'aiMarketplaceApi',
@@ -906,8 +906,8 @@ class AiMarketplace {
                     'Content-Type': 'application/json',
                 };
                 // Determine request parameters based on resource and operation
-                let method;
-                let endpoint;
+                let method = 'GET';
+                let endpoint = '';
                 let body = undefined;
                 let useAuth = false;
                 // Route to appropriate handler based on resource

@@ -10,9 +10,11 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": false,
     "resolveJsonModule": true,
-    "noImplicitAny": false,
-    "noImplicitReturns": false,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
     "noImplicitThis": false,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
     "types": []
   },
   "include": [

@@ -3,14 +3,39 @@ import {
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
+	NodeConnectionTypes,
 	NodeOperationError,
 } from 'n8n-workflow';
 
+/**
+ * Additional configuration fields for AI Marketplace operations
+ */
 interface IAdditionalFields {
+	/** Request timeout in seconds (default: 30) */
 	timeout?: number;
+	/** Enable automatic retry on 5xx server errors */
 	retryOn5xx?: boolean;
+	/** Maximum number of retry attempts (default: 3) */
 	maxRetries?: number;
+	/** Response format preference */
 	responseFormat?: 'json' | 'raw';
+}
+
+/**
+ * Standard API error structure for proper error handling
+ */
+interface IApiError {
+	/** HTTP response details if available */
+	response?: {
+		/** HTTP status code */
+		status?: number;
+		/** Response body data */
+		data?: unknown;
+	};
+	/** Error message */
+	message?: string;
+	/** Error code identifier */
+	code?: string;
 }
 
 export class AiMarketplace implements INodeType {
@@ -25,8 +50,8 @@ export class AiMarketplace implements INodeType {
 		defaults: {
 			name: 'AI Marketplace',
 		},
-		inputs: ['main'],
-		outputs: ['main'],
+		inputs: [NodeConnectionTypes.Main],
+		outputs: [NodeConnectionTypes.Main],
 		credentials: [
 			{
 				name: 'aiMarketplaceApi',
@@ -920,8 +945,8 @@ export class AiMarketplace implements INodeType {
 				};
 
 				// Determine request parameters based on resource and operation
-				let method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
-				let endpoint: string;
+				let method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE' = 'GET';
+				let endpoint = '';
 				let body: any = undefined;
 				let useAuth = false;
 
@@ -1098,7 +1123,7 @@ export class AiMarketplace implements INodeType {
 						}
 					break;
 				} catch (error) {
-					const errorObj = error as { response?: { status?: number }; message?: string };
+					const errorObj = error as IApiError;
 					const isRetryableError = retryOn5xx && errorObj.response?.status && errorObj.response.status >= 500;
 					
 					if (retryCount < maxRetries && isRetryableError) {
@@ -1130,10 +1155,10 @@ export class AiMarketplace implements INodeType {
 			});
 
 		} catch (error) {
-			const errorObj = error as { message?: string };
+			const errorObj = error as IApiError;
 			if (this.continueOnFail()) {
 				returnData.push({
-					json: { error: errorObj.message || 'Unknown error' },
+					json: { error: errorObj.message ?? 'Unknown error' },
 					pairedItem: { item: i },
 				});
 				continue;

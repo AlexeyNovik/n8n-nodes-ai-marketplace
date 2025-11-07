@@ -3,6 +3,8 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2020,
     sourceType: 'module',
+    project: './tsconfig.json',
+    extraFileExtensions: ['.json'],
   },
   env: {
     node: true,
@@ -15,8 +17,8 @@ module.exports = {
   ],
   rules: {
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-    '@typescript-eslint/prefer-nullish-coalescing': 'off',
-    '@typescript-eslint/prefer-optional-chain': 'off',
+    '@typescript-eslint/prefer-nullish-coalescing': 'warn',
+    '@typescript-eslint/prefer-optional-chain': 'warn',
     '@typescript-eslint/no-unsafe-argument': 'off',
     '@typescript-eslint/no-unsafe-assignment': 'off',
     '@typescript-eslint/no-unsafe-member-access': 'off',

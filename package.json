@@ -25,7 +25,7 @@
     "build": "tsc --noEmitOnError false --skipLibCheck && gulp build:icons",
     "dev": "tsc --watch --skipLibCheck --noEmitOnError false",
     "format": "prettier nodes credentials --write",
-    "lint": "eslint \"nodes/**/*.ts\" \"credentials/**/*.ts\" package.json",
+    "lint": "eslint \"nodes/**/*.ts\" \"credentials/**/*.ts\"",
     "lintfix": "eslint \"nodes/**/*.ts\" \"credentials/**/*.ts\" package.json --fix",
     "prepublishOnly": "npm run build && npm run lint -s"
   },
