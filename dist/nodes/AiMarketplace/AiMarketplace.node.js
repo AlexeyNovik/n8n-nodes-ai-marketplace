@@ -2,6 +2,97 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AiMarketplace = void 0;
 const n8n_workflow_1 = require("n8n-workflow");
+/**
+ * Validates that an ID parameter is safe for use in URLs
+ * Prevents path traversal and URL injection attacks
+ */
+function validateId(id, paramName) {
+    if (!id || typeof id !== 'string') {
+        throw new Error(`${paramName} is required and must be a string`);
+    }
+    // Check for path traversal attempts
+    if (id.includes('..') || id.includes('/') || id.includes('\\')) {
+        throw new Error(`${paramName} contains invalid characters (path traversal attempt detected)`);
+    }
+    // Check for URL-unsafe characters that could enable injection
+    if (id.includes('%') || id.includes('?') || id.includes('#') || id.includes('&')) {
+        throw new Error(`${paramName} contains invalid characters`);
+    }
+    // Ensure reasonable length (UUIDs are typically < 50 chars)
+    if (id.length > 100) {
+        throw new Error(`${paramName} exceeds maximum length of 100 characters`);
+    }
+    // Check for control characters
+    // eslint-disable-next-line no-control-regex
+    if (/[\x00-\x1F\x7F]/.test(id)) {
+        throw new Error(`${paramName} contains invalid control characters`);
+    }
+}
+/**
+ * Validates that a callback URL uses HTTPS protocol
+ * Required for secure webhook delivery
+ */
+function validateCallbackUrl(url) {
+    if (!url || typeof url !== 'string') {
+        throw new Error('Callback URL is required');
+    }
+    // Parse URL to check protocol
+    try {
+        const parsedUrl = new URL(url);
+        if (parsedUrl.protocol !== 'https:') {
+            throw new Error('Callback URL must use HTTPS protocol for security. HTTP is not allowed.');
+        }
+    }
+    catch (error) {
+        if (error instanceof TypeError) {
+            throw new Error('Invalid callback URL format');
+        }
+        throw error;
+    }
+}
+/**
+ * Sanitizes and validates text input fields
+ * Prevents excessively long inputs and potential injection attacks
+ */
+function sanitizeTextInput(input, fieldName, maxLength) {
+    if (!input) {
+        return input;
+    }
+    if (typeof input !== 'string') {
+        throw new Error(`${fieldName} must be a string`);
+    }
+    // Trim whitespace
+    const trimmed = input.trim();
+    // Check length
+    if (trimmed.length > maxLength) {
+        throw new Error(`${fieldName} exceeds maximum length of ${maxLength} characters (current: ${trimmed.length})`);
+    }
+    // Check for control characters (except newlines and tabs which are acceptable in text)
+    // eslint-disable-next-line no-control-regex
+    if (/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(trimmed)) {
+        throw new Error(`${fieldName} contains invalid control characters`);
+    }
+    return trimmed;
+}
+/**
+ * Validates numeric input fields
+ * Ensures values are within acceptable ranges
+ */
+function validateNumericInput(value, fieldName, min, max) {
+    if (typeof value !== 'number' || isNaN(value)) {
+        throw new Error(`${fieldName} must be a valid number`);
+    }
+    if (!isFinite(value)) {
+        throw new Error(`${fieldName} must be a finite number`);
+    }
+    if (value < min) {
+        throw new Error(`${fieldName} must be at least ${min} (current: ${value})`);
+    }
+    if (value > max) {
+        throw new Error(`${fieldName} must not exceed ${max} (current: ${value})`);
+    }
+    return value;
+}
 class AiMarketplace {
     constructor() {
         this.description = {
@@ -351,7 +442,7 @@ class AiMarketplace {
                         {
                             name: 'Initialize Categories',
                             value: 'initCategories',
-                            description: 'Initialize default categories for testing',
+                            description: 'Initialize default categories (requires authentication and admin privileges)',
                             action: 'Initialize categories',
                         },
                     ],
@@ -482,7 +573,7 @@ class AiMarketplace {
                     type: 'string',
                     required: true,
                     default: '',
-                    description: 'Lot title',
+                    description: 'Lot title (max 200 characters)',
                     displayOptions: {
                         show: {
                             resource: ['lots'],
@@ -496,7 +587,7 @@ class AiMarketplace {
                     type: 'string',
                     required: true,
                     default: '',
-                    description: 'Lot description',
+                    description: 'Lot description (max 5000 characters)',
                     displayOptions: {
                         show: {
                             resource: ['lots'],
@@ -632,7 +723,7 @@ class AiMarketplace {
                     name: 'message',
                     type: 'string',
                     default: '',
-                    description: 'Optional message to seller',
+                    description: 'Optional message to seller (max 1000 characters)',
                     displayOptions: {
                         show: {
                             resource: ['offers'],
@@ -691,7 +782,7 @@ class AiMarketplace {
                     name: 'comment',
                     type: 'string',
                     default: '',
-                    description: 'Optional feedback comment',
+                    description: 'Optional feedback comment (max 512 characters)',
                     displayOptions: {
                         show: {
                             resource: ['feedback'],
@@ -744,7 +835,7 @@ class AiMarketplace {
                     type: 'string',
                     required: true,
                     default: '',
-                    description: 'HTTPS callback URL for webhook events',
+                    description: 'HTTPS callback URL for webhook events (HTTPS required for security, HTTP not allowed)',
                     displayOptions: {
                         show: {
                             resource: ['events'],
@@ -855,7 +946,7 @@ class AiMarketplace {
                             name: 'maxRetries',
                             type: 'number',
                             default: 2,
-                            description: 'Maximum number of retry attempts',
+                            description: 'Maximum number of retry attempts (2 means 3 total attempts with exponential backoff)',
                         },
                         {
                             displayName: 'Response Format',
@@ -970,28 +1061,36 @@ class AiMarketplace {
                     else if (operation === 'create') {
                         method = 'POST';
                         endpoint = '/lots-v2';
+                        const title = sanitizeTextInput(this.getNodeParameter('title', i), 'Title', 200);
+                        const description = sanitizeTextInput(this.getNodeParameter('description', i), 'Description', 5000);
+                        const timeline = this.getNodeParameter('timeline', i, '');
+                        const budget = this.getNodeParameter('budget', i);
+                        validateNumericInput(budget, 'Budget', 0, 999999999);
                         body = {
-                            title: this.getNodeParameter('title', i),
-                            description: this.getNodeParameter('description', i),
+                            title: title,
+                            description: description,
                             category: this.getNodeParameter('category', i),
-                            budget: this.getNodeParameter('budget', i),
+                            budget: budget,
                             currency: this.getNodeParameter('currency', i, 'USD'),
-                            timeline: this.getNodeParameter('timeline', i, ''),
+                            timeline: timeline ? sanitizeTextInput(timeline, 'Timeline', 500) : '',
                         };
                     }
                     else if (operation === 'get') {
                         method = 'GET';
                         const lotId = this.getNodeParameter('lotId', i);
+                        validateId(lotId, 'Lot ID');
                         endpoint = `/lots-v2/${encodeURIComponent(lotId)}`;
                     }
                     else if (operation === 'close') {
                         method = 'POST';
                         const lotId = this.getNodeParameter('lotId', i);
+                        validateId(lotId, 'Lot ID');
                         endpoint = `/lots-v2/${encodeURIComponent(lotId)}/close`;
                     }
                     else if (operation === 'reopen') {
                         method = 'POST';
                         const lotId = this.getNodeParameter('lotId', i);
+                        validateId(lotId, 'Lot ID');
                         endpoint = `/lots-v2/${encodeURIComponent(lotId)}/reopen`;
                     }
                 }
@@ -1000,37 +1099,48 @@ class AiMarketplace {
                     if (operation === 'create') {
                         method = 'POST';
                         endpoint = '/offers-v2';
+                        const offerLotId = this.getNodeParameter('lotId', i);
+                        validateId(offerLotId, 'Lot ID');
+                        const message = this.getNodeParameter('message', i, '');
+                        const offerTimeline = this.getNodeParameter('timeline', i, '');
+                        const amount = this.getNodeParameter('amount', i);
+                        validateNumericInput(amount, 'Amount', 0, 999999999);
                         body = {
-                            lotId: this.getNodeParameter('lotId', i),
-                            amount: this.getNodeParameter('amount', i),
+                            lotId: offerLotId,
+                            amount: amount,
                             currency: this.getNodeParameter('currency', i, 'USD'),
-                            message: this.getNodeParameter('message', i, ''),
-                            timeline: this.getNodeParameter('timeline', i, ''),
+                            message: message ? sanitizeTextInput(message, 'Message', 1000) : '',
+                            timeline: offerTimeline ? sanitizeTextInput(offerTimeline, 'Timeline', 500) : '',
                         };
                     }
                     else if (operation === 'get') {
                         method = 'GET';
                         const offerId = this.getNodeParameter('offerId', i);
+                        validateId(offerId, 'Offer ID');
                         endpoint = `/offers-v2/${encodeURIComponent(offerId)}`;
                     }
                     else if (operation === 'accept') {
                         method = 'POST';
                         const offerId = this.getNodeParameter('offerId', i);
+                        validateId(offerId, 'Offer ID');
                         endpoint = `/offers-v2/${encodeURIComponent(offerId)}/accept`;
                     }
                     else if (operation === 'reject') {
                         method = 'POST';
                         const offerId = this.getNodeParameter('offerId', i);
+                        validateId(offerId, 'Offer ID');
                         endpoint = `/offers-v2/${encodeURIComponent(offerId)}/reject`;
                     }
                     else if (operation === 'complete') {
                         method = 'POST';
                         const offerId = this.getNodeParameter('offerId', i);
+                        validateId(offerId, 'Offer ID');
                         endpoint = `/offers-v2/${encodeURIComponent(offerId)}/complete`;
                     }
                     else if (operation === 'cancel') {
                         method = 'POST';
                         const offerId = this.getNodeParameter('offerId', i);
+                        validateId(offerId, 'Offer ID');
                         endpoint = `/offers-v2/${encodeURIComponent(offerId)}/cancel`;
                     }
                 }
@@ -1038,20 +1148,28 @@ class AiMarketplace {
                     useAuth = true;
                     method = 'POST';
                     endpoint = '/feedback-v2';
+                    const feedbackOfferId = this.getNodeParameter('offerId', i);
+                    validateId(feedbackOfferId, 'Offer ID');
+                    const comment = this.getNodeParameter('comment', i, '');
+                    const rating = this.getNodeParameter('rating', i);
+                    validateNumericInput(rating, 'Rating', 1, 5);
                     body = {
-                        offerId: this.getNodeParameter('offerId', i),
-                        rating: this.getNodeParameter('rating', i),
-                        comment: this.getNodeParameter('comment', i, ''),
+                        offerId: feedbackOfferId,
+                        rating: rating,
+                        comment: comment ? sanitizeTextInput(comment, 'Comment', 512) : '',
                     };
                 }
                 else if (resource === 'events') {
                     useAuth = true;
+                    // NOTE: Events endpoints intentionally don't use /v2 suffix as they are a separate API service
                     if (operation === 'subscribe') {
                         method = 'POST';
                         endpoint = '/events/subscribe';
+                        const callbackUrl = this.getNodeParameter('callbackUrl', i);
+                        validateCallbackUrl(callbackUrl);
                         body = {
                             eventTypes: this.getNodeParameter('eventTypes', i),
-                            callbackUrl: this.getNodeParameter('callbackUrl', i),
+                            callbackUrl: callbackUrl,
                             deliveryMethod: this.getNodeParameter('deliveryMethod', i, 'webhook'),
                             securityHeaders: {},
                             retryPolicy: 'standard',
@@ -1061,6 +1179,7 @@ class AiMarketplace {
                     else if (operation === 'unsubscribe') {
                         method = 'DELETE';
                         const subscriptionId = this.getNodeParameter('subscriptionId', i);
+                        validateId(subscriptionId, 'Subscription ID');
                         endpoint = `/events/subscriptions/${encodeURIComponent(subscriptionId)}`;
                     }
                     else if (operation === 'listSubscriptions') {
@@ -1074,14 +1193,22 @@ class AiMarketplace {
                     endpoint = '/categories-v2';
                 }
                 else if (resource === 'admin') {
-                    useAuth = false; // Admin endpoints are public for testing
+                    useAuth = true; // SECURITY: Admin endpoints require authentication
                     method = 'POST';
                     endpoint = '/admin-v2/init-categories';
                 }
+                // Validate credentials are provided when required
+                if (useAuth) {
+                    const credentials = await this.getCredentials('aiMarketplaceApi').catch(() => null);
+                    if (!(credentials === null || credentials === void 0 ? void 0 : credentials.idToken)) {
+                        throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Authentication required: Please configure AI Marketplace API credentials for this operation');
+                    }
+                }
                 // Make request with retry logic
-                let retryCount = 0;
+                let attempt = 0;
                 let response;
-                while (retryCount <= maxRetries) {
+                const maxAttempts = maxRetries + 1; // maxRetries = 2 means 3 total attempts (1 initial + 2 retries)
+                while (attempt < maxAttempts) {
                     try {
                         if (useAuth) {
                             response = await this.helpers.httpRequestWithAuthentication.call(this, 'aiMarketplaceApi', {
@@ -1107,10 +1234,16 @@ class AiMarketplace {
                     }
                     catch (error) {
                         const errorObj = error;
-                        const isRetryableError = retryOn5xx && ((_e = errorObj.response) === null || _e === void 0 ? void 0 : _e.status) && errorObj.response.status >= 500;
-                        if (retryCount < maxRetries && isRetryableError) {
-                            retryCount++;
-                            // Retry immediately - n8n workflow-level retries will handle delays
+                        const status = (_e = errorObj.response) === null || _e === void 0 ? void 0 : _e.status;
+                        const isRetryableError = retryOn5xx && status && status >= 500;
+                        const isRateLimited = status === 429;
+                        attempt++;
+                        // Using || here is intentional - we want to retry on EITHER condition (not nullish coalescing)
+                        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+                        if (attempt < maxAttempts && (isRetryableError || isRateLimited)) {
+                            // Exponential backoff: wait 1s, 2s, 4s, etc.
+                            const delayMs = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+                            await new Promise(resolve => setTimeout(resolve, delayMs));
                             continue;
                         }
                         throw error;
@@ -1124,6 +1257,9 @@ class AiMarketplace {
                 // Apply client-side limiting for lots list (MCP compatibility)
                 if (resource === 'lots' && operation === 'list' && responseFormat === 'json') {
                     const limit = this.getNodeParameter('limit', i, 0);
+                    if (limit !== 0) {
+                        validateNumericInput(limit, 'Limit', 0, 10000);
+                    }
                     if (limit > 0 && (response === null || response === void 0 ? void 0 : response.lots) && Array.isArray(response.lots)) {
                         response.lots = response.lots.slice(0, limit);
                     }

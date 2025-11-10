@@ -75,10 +75,11 @@
         "resource": "lots",
         "operation": "create",
         "title": "Sample AI Service",
-        "pricingType": "fixed",
-        "price": 100,
-        "catId": "ai-services",
-        "description": "A sample AI service offering created via n8n workflow."
+        "description": "A sample AI service offering created via n8n workflow.",
+        "category": "ai-services",
+        "budget": 100,
+        "currency": "USD",
+        "timeline": "2-3 weeks"
       },
       "id": "e5f6g7h8-9i0j-1k2l-3m4n-o5p6q7r8s9t0",
       "name": "AI Marketplace: Create Lot",
@@ -101,7 +102,9 @@
         "operation": "create",
         "lotId": "={{ $('AI Marketplace: Create Lot').item.json.lotId }}",
         "amount": 95,
-        "comment": "Great service, looking forward to working with you!"
+        "currency": "USD",
+        "message": "Great service, looking forward to working with you!",
+        "timeline": "2 weeks"
       },
       "id": "f7g8h9i0-1j2k-3l4m-5n6o-p7q8r9s0t1u2",
       "name": "AI Marketplace: Create Offer",
@@ -165,9 +168,7 @@
         "resource": "feedback",
         "operation": "create",
         "offerId": "={{ $('AI Marketplace: Create Offer').item.json.offerId }}",
-        "quality": 5,
-        "deliveryTime": 5,
-        "price": 4,
+        "rating": 5,
         "comment": "Excellent service, very professional and delivered on time!"
       },
       "id": "i0j1k2l3-4m5n-6o7p-8q9r-s0t1u2v3w4x5",
