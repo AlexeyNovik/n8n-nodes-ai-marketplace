@@ -13,10 +13,6 @@ import {
 interface IAdditionalFields {
 	/** Request timeout in seconds (default: 30) */
 	timeout?: number;
-	/** Enable automatic retry on 5xx server errors */
-	retryOn5xx?: boolean;
-	/** Maximum number of retry attempts (default: 3) */
-	maxRetries?: number;
 	/** Response format preference */
 	responseFormat?: 'json' | 'raw';
 }
@@ -987,20 +983,6 @@ export class AiMarketplace implements INodeType {
 						description: 'Request timeout in seconds',
 					},
 					{
-						displayName: 'Retry on 5xx Errors',
-						name: 'retryOn5xx',
-						type: 'boolean',
-						default: true,
-						description: 'Whether to retry on 5xx HTTP status codes',
-					},
-					{
-						displayName: 'Max Retries',
-						name: 'maxRetries',
-						type: 'number',
-						default: 2,
-						description: 'Maximum number of retry attempts (2 means 3 total attempts with exponential backoff)',
-					},
-					{
 						displayName: 'Response Format',
 						name: 'responseFormat',
 						type: 'options',
@@ -1035,8 +1017,6 @@ export class AiMarketplace implements INodeType {
 			const additionalFields = this.getNodeParameter('additionalFields', i, {}) as IAdditionalFields;
 
 				const timeout = additionalFields.timeout ?? 30;
-				const retryOn5xx = additionalFields.retryOn5xx ?? true;
-				const maxRetries = additionalFields.maxRetries ?? 2;
 				const responseFormat = additionalFields.responseFormat ?? 'json';
 
 				// Determine base URL
@@ -1243,51 +1223,27 @@ export class AiMarketplace implements INodeType {
 			}
 		}
 
-			// Make request with retry logic
-			let attempt = 0;
+			// Make request
 			let response;
-			const maxAttempts = maxRetries + 1; // maxRetries = 2 means 3 total attempts (1 initial + 2 retries)
 			
-			while (attempt < maxAttempts) {
-				try {
-					if (useAuth) {
-						response = await this.helpers.httpRequestWithAuthentication.call(this, 'aiMarketplaceApi', {
-							method,
-							url: `${baseUrl}${endpoint}`,
-							headers,
-							timeout: timeout * 1000,
-							json: responseFormat === 'json',
-							body: body ? (responseFormat === 'json' ? body : JSON.stringify(body)) : undefined,
-						});
-					} else {
-						response = await this.helpers.httpRequest({
-							method,
-							url: `${baseUrl}${endpoint}`,
-							headers,
-							timeout: timeout * 1000,
-							json: responseFormat === 'json',
-							body: body ? (responseFormat === 'json' ? body : JSON.stringify(body)) : undefined,
-						});
-					}
-				break;
-			} catch (error) {
-				const errorObj = error as IApiError;
-				const status = errorObj.response?.status;
-				const isRetryableError = retryOn5xx && status && status >= 500;
-				const isRateLimited = status === 429;
-				
-			attempt++;
-			
-			// Using || here is intentional - we want to retry on EITHER condition (not nullish coalescing)
-			// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-			if (attempt < maxAttempts && (isRetryableError || isRateLimited)) {
-				// Exponential backoff: wait 1s, 2s, 4s, etc.
-				const delayMs = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
-				await new Promise(resolve => setTimeout(resolve, delayMs));
-				continue;
-			}
-				throw error;
-			}
+			if (useAuth) {
+				response = await this.helpers.httpRequestWithAuthentication.call(this, 'aiMarketplaceApi', {
+					method,
+					url: `${baseUrl}${endpoint}`,
+					headers,
+					timeout: timeout * 1000,
+					json: responseFormat === 'json',
+					body: body ? (responseFormat === 'json' ? body : JSON.stringify(body)) : undefined,
+				});
+			} else {
+				response = await this.helpers.httpRequest({
+					method,
+					url: `${baseUrl}${endpoint}`,
+					headers,
+					timeout: timeout * 1000,
+					json: responseFormat === 'json',
+					body: body ? (responseFormat === 'json' ? body : JSON.stringify(body)) : undefined,
+				});
 			}
 
 				// Special handling for certain operations

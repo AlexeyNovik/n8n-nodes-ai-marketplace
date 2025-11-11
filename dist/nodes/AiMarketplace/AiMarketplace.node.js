@@ -935,20 +935,6 @@ class AiMarketplace {
                             description: 'Request timeout in seconds',
                         },
                         {
-                            displayName: 'Retry on 5xx Errors',
-                            name: 'retryOn5xx',
-                            type: 'boolean',
-                            default: true,
-                            description: 'Whether to retry on 5xx HTTP status codes',
-                        },
-                        {
-                            displayName: 'Max Retries',
-                            name: 'maxRetries',
-                            type: 'number',
-                            default: 2,
-                            description: 'Maximum number of retry attempts (2 means 3 total attempts with exponential backoff)',
-                        },
-                        {
                             displayName: 'Response Format',
                             name: 'responseFormat',
                             type: 'options',
@@ -971,7 +957,7 @@ class AiMarketplace {
         };
     }
     async execute() {
-        var _a, _b, _c, _d, _e, _f;
+        var _a, _b, _c;
         const items = this.getInputData();
         const returnData = [];
         for (let i = 0; i < items.length; i++) {
@@ -982,9 +968,7 @@ class AiMarketplace {
                 const overrideBaseUrl = this.getNodeParameter('overrideBaseUrl', i);
                 const additionalFields = this.getNodeParameter('additionalFields', i, {});
                 const timeout = (_a = additionalFields.timeout) !== null && _a !== void 0 ? _a : 30;
-                const retryOn5xx = (_b = additionalFields.retryOn5xx) !== null && _b !== void 0 ? _b : true;
-                const maxRetries = (_c = additionalFields.maxRetries) !== null && _c !== void 0 ? _c : 2;
-                const responseFormat = (_d = additionalFields.responseFormat) !== null && _d !== void 0 ? _d : 'json';
+                const responseFormat = (_b = additionalFields.responseFormat) !== null && _b !== void 0 ? _b : 'json';
                 // Determine base URL
                 let baseUrl = overrideBaseUrl;
                 if (!baseUrl) {
@@ -1204,50 +1188,27 @@ class AiMarketplace {
                         throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'Authentication required: Please configure AI Marketplace API credentials for this operation');
                     }
                 }
-                // Make request with retry logic
-                let attempt = 0;
+                // Make request
                 let response;
-                const maxAttempts = maxRetries + 1; // maxRetries = 2 means 3 total attempts (1 initial + 2 retries)
-                while (attempt < maxAttempts) {
-                    try {
-                        if (useAuth) {
-                            response = await this.helpers.httpRequestWithAuthentication.call(this, 'aiMarketplaceApi', {
-                                method,
-                                url: `${baseUrl}${endpoint}`,
-                                headers,
-                                timeout: timeout * 1000,
-                                json: responseFormat === 'json',
-                                body: body ? (responseFormat === 'json' ? body : JSON.stringify(body)) : undefined,
-                            });
-                        }
-                        else {
-                            response = await this.helpers.httpRequest({
-                                method,
-                                url: `${baseUrl}${endpoint}`,
-                                headers,
-                                timeout: timeout * 1000,
-                                json: responseFormat === 'json',
-                                body: body ? (responseFormat === 'json' ? body : JSON.stringify(body)) : undefined,
-                            });
-                        }
-                        break;
-                    }
-                    catch (error) {
-                        const errorObj = error;
-                        const status = (_e = errorObj.response) === null || _e === void 0 ? void 0 : _e.status;
-                        const isRetryableError = retryOn5xx && status && status >= 500;
-                        const isRateLimited = status === 429;
-                        attempt++;
-                        // Using || here is intentional - we want to retry on EITHER condition (not nullish coalescing)
-                        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-                        if (attempt < maxAttempts && (isRetryableError || isRateLimited)) {
-                            // Exponential backoff: wait 1s, 2s, 4s, etc.
-                            const delayMs = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
-                            await new Promise(resolve => setTimeout(resolve, delayMs));
-                            continue;
-                        }
-                        throw error;
-                    }
+                if (useAuth) {
+                    response = await this.helpers.httpRequestWithAuthentication.call(this, 'aiMarketplaceApi', {
+                        method,
+                        url: `${baseUrl}${endpoint}`,
+                        headers,
+                        timeout: timeout * 1000,
+                        json: responseFormat === 'json',
+                        body: body ? (responseFormat === 'json' ? body : JSON.stringify(body)) : undefined,
+                    });
+                }
+                else {
+                    response = await this.helpers.httpRequest({
+                        method,
+                        url: `${baseUrl}${endpoint}`,
+                        headers,
+                        timeout: timeout * 1000,
+                        json: responseFormat === 'json',
+                        body: body ? (responseFormat === 'json' ? body : JSON.stringify(body)) : undefined,
+                    });
                 }
                 // Special handling for certain operations
                 // Add sessionToken alias for login (MCP compatibility)
@@ -1273,7 +1234,7 @@ class AiMarketplace {
                 const errorObj = error;
                 if (this.continueOnFail()) {
                     returnData.push({
-                        json: { error: (_f = errorObj.message) !== null && _f !== void 0 ? _f : 'Unknown error' },
+                        json: { error: (_c = errorObj.message) !== null && _c !== void 0 ? _c : 'Unknown error' },
                         pairedItem: { item: i },
                     });
                     continue;
